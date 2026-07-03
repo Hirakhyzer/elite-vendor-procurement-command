@@ -79,30 +79,15 @@ export function requestAnalysis(request, vendors, budgets) {
     decision = "Escalate";
     reason = "Commercial value or control requirements need additional approval before purchase order release.";
   }
-  return {
-    quote,
-    selected,
-    vendor,
-    risk,
-    budget,
-    available,
-    selectedPrice,
-    budgetFit,
-    approvalKeys,
-    approvedCount,
-    approvalTotal: approvalKeys.length,
-    decision,
-    reason,
-    quoteSavings: quote.savingsPotential,
-  };
+  return { quote, selected, vendor, risk, budget, available, selectedPrice, budgetFit, approvalKeys, approvedCount, approvalTotal: approvalKeys.length, decision, reason, quoteSavings: quote.savingsPotential };
 }
 
 export function matchStatus(order) {
   const delivery = Boolean(order.deliveryReceived);
   const invoice = Boolean(order.invoiceReceived);
   const amountMatch = invoice && Math.abs(Number(order.invoiceAmount || 0) - Number(order.poAmount || 0)) <= 1;
-  const status = delivery && invoice && amountMatch ? "Matched" : !delivery && invoice ? "Invoice hold" : delivery && !invoice ? "Awaiting invoice" : "Pending";
   const exception = !amountMatch && invoice ? Math.abs(Number(order.invoiceAmount || 0) - Number(order.poAmount || 0)) : 0;
+  const status = delivery && invoice && amountMatch ? "Matched" : invoice && !amountMatch ? "Invoice hold" : delivery && !invoice ? "Awaiting invoice" : "Pending";
   return { delivery, invoice, amountMatch, status, exception };
 }
 
@@ -129,21 +114,7 @@ export function procurementSummary(state) {
   pendingApprovals.forEach(({ request, analysis }) => actionPlan.push({ type: "approval", title: `Complete ${request.id} approvals`, detail: `${analysis.approvedCount}/${analysis.approvalTotal} required approvals complete · ${money(analysis.selectedPrice)}` }));
   unmatchedOrders.forEach(({ order, match }) => actionPlan.push({ type: "matching", title: `Resolve ${order.id} matching status`, detail: `${match.status}${match.exception ? ` · ${money(match.exception)} difference` : ""}` }));
   if (!actionPlan.length) actionPlan.push({ type: "success", title: "Procurement controls are stable", detail: "Current vendors, approvals, and matching records have no immediate exception." });
-  return {
-    analyses,
-    risks,
-    orders,
-    budgetLimit,
-    budgetCommitted,
-    budgetRemaining: budgetLimit - budgetCommitted,
-    activeRequests,
-    pendingApprovals,
-    highRiskVendors,
-    expirySoon,
-    unmatchedOrders,
-    potentialSavings,
-    actionPlan: actionPlan.slice(0, 8),
-  };
+  return { analyses, risks, orders, budgetLimit, budgetCommitted, budgetRemaining: budgetLimit - budgetCommitted, activeRequests, pendingApprovals, highRiskVendors, expirySoon, unmatchedOrders, potentialSavings, actionPlan: actionPlan.slice(0, 8) };
 }
 
 export function reportText(state, summary, request, analysis) {
